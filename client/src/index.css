@@ -1,10 +1,53 @@
-main{
-    border: 2px solid red;
-    min-height: 60vh;
+/* ---------- GENERAL CSS ------------ */
+
+body {
+  background-color: #131413;
 }
+
+/* ---------- BUTTONS ------------ */
+
+.button-container{
+  display: flex;
+  gap: 1rem;
+  width: 4rem;
+}
+
+.cancel-blog-creation{
+  text-decoration: none;
+}
+
+/* ---------- MAIN PAGE CSS ------------ */
+
+main{
+  border: 2px solid red;
+  min-height: 60vh;
+}
+
+.navbar-nav{
+  --bs-nav-link-color: #fefefe;
+}
+
+.navbar-brand{
+  --bs-navbar-brand-color: #fefefe;
+}
+
+.navbar{
+  --bs-navbar-toggler-border-color: none;
+}
+
+.navbar-toggler-icon{
+  --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e")
+}
+
+
+
+/* ---------- BLOG POST CSS ------------ */
 
 .blog-type {
   text-align: center;
+  color: #009f4d;
+  padding-bottom: 10px;
+  font-size: 2.8rem;
 }
 
 .blog-container-flexbox-items {
@@ -16,7 +59,7 @@ main{
 }
 
 .blog-container-flexbox {
-
+  background-color: #fefefe;
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -28,19 +71,59 @@ main{
   font-size: 2.5rem;
 }
 
-.cancel-blog-creation{
-  text-decoration: none;
+.blog-item img{
+  max-width: 88%;
+  text-align: center;
+  align-self: center;
 }
+
+p img{
+  max-width: 86%;
+}
+
+.heading form{
+  display: flex;
+}
+
+
+/* ---------- CREATE A POST PAGE CSS ------------ */
+
+.page-title{
+  text-align: center;
+  color: #fff274;
+  padding-bottom: 10px;
+  font-size: 2.8rem;
+  /*It's actually the same as blog-type!*/
+}
+
+.new-blog-form{
+  background-color: #f7fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 3px solid #7c8acf;
+  padding: 3rem;
+}
+
+.blog-cover{
+  max-width: 100%;
+}
+
+/* ---------- DETAILED BLOG PAGE CSS ------------ */
+
+.read-blog-form{
+  background-color: #f7fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 3px solid #7c8acf;
+  padding: 3rem;
+} /* Not being used */
 
 .form-container{
   display: grid;
   gap: 2rem;
-}
-
-.button-container{
-  display: flex;
-  gap: 1rem;
-  width: 4rem;
+  max-width: 100%;
 }
 
 .options-to-do-with-blog{
@@ -48,3 +131,9 @@ main{
   justify-content: space-between;
   margin-top: 2rem;
 }
+
+.blue-item{
+  background-color: #0096ca;
+  color: #fefefe;
+}
+
