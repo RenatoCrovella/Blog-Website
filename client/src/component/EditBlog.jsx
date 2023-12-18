@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import ReactQuill from 'react-quill';
+import React, { useState } from "react";
+import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 
@@ -9,66 +9,73 @@ const modules = {
     ["bold", "italic"],
     ["link", "blockquote", "code-block", "image"],
     [{ list: "ordered" }, { list: "bullet" }],
-
-  ]
+  ],
 };
 
-const EditBlog = ({ blog }) => {
-  const [blogTitle, setBlogTitle] = useState(blog.title);
-  const [blogContent, setBlogContent] = useState(blog.content);
+const EditBlog = ({ onEditBlog, blogPost }) => {
+  const [blogTitle, setBlogTitle] = useState(blogPost.title);
+  const [blogContent, setBlogContent] = useState(blogPost.content);
+  const [blogCover, setBlogCover] = useState(blogPost.cover);
 
-  const handleSave = async (event) => {
-    // event.preventDefault();
-    try {
-      const response = await fetch('http://localhost:8000/updateBlog', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          blogType: blog.type,
-          blogId: blog._id,
-          blogTitle: blogTitle,
-          blogContent: blogContent,
-        }),
-      });
+  const handleEditBlog = async (event) => {
+    event.preventDefault();
 
-      if (!response.ok) {
-        throw new Error('Failed to update blog');
-      }
-
-      // Handle successful update, e.g., redirect to the updated blog page
-      // Example: history.push(`/${blog.type}/${blog._id}`);
-    } catch (error) {
-      console.error('Error updating blog:', error);
+    if (!blogTitle || !blogContent || !blogCover) {
+      alert('Please enter a title and content for the blog');
+      console.log(blogTitle + "/" + blogCover + "/" + blogContent)
+      return;
+    } else {
+      const editedPost = {
+        blogTitle,
+        blogCover,
+        blogContent,
+        _id: blogPost._id,
+      };
+  
+      await onEditBlog(editedPost); // Trigger the post's edit update in DetailedViewOfBlog
+      setBlogTitle('');
+      setBlogCover('');
+      setBlogContent('');  
     }
   };
 
   return (
     <>
-      <h1>Track your days....</h1>
-      <form onSubmit={handleSave} className="form-container">
-        <input type="hidden" name="blogType" value={blog.type} />
-        <input type="hidden" name="blogId" value={blog._id} />
+      <h1>Editing your post</h1>
+      <form onSubmit={handleEditBlog} className="form-container">
         <input
           type="text"
-          id="blogTitle"
-          name="blogTitle"
           value={blogTitle}
           onChange={(e) => setBlogTitle(e.target.value)}
+          placeholder="Enter title here"
         />
+        <input
+          type="text"
+          value={blogCover}
+          onChange={(e) => setBlogCover(e.target.value)}
+          placeholder="Provide cover image URL"
+        />
+        {blogCover != "" && <img className="blog-cover" src={blogCover} />}
         <ReactQuill
+          modules={modules}
           value={blogContent}
-          modules={modules} onChange={setBlogContent}
+          onChange={setBlogContent}
+          placeholder="What did you learn today?"
           theme="snow"
         />
         <div className="button-container mt-4">
-          <button type="submit" className="btn btn-outline-success">
+          <button
+            type="button"
+            className="cancel-blog-creation btn btn-danger"
+            onClick={() => {
+              navigate("/", { replace: true });
+            }}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="btn btn-success">
             Save
           </button>
-          <a href={`/${blog.type}`} className="cancel-blog-creation btn btn-outline-danger">
-            Cancel
-          </a>
         </div>
       </form>
     </>
