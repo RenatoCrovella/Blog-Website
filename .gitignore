@@ -1,6 +1,7 @@
 # This code is added by us.
 .env
 
+client/src/component/backup.jsx
 
 # Logs
 logs
