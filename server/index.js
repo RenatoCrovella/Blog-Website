@@ -12,23 +12,28 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.json());
 app.use((req, res, next) => {
-    const date = new Date().toISOString();
-    console.log(`Route accessed at ${date}: ${req.method} ${req.url}`);
-    next();
-  });
-  
-// cors
-app.use(cors({ origin: true}));
+  const date = new Date().toISOString();
+  console.log(`Route accessed at ${date}: ${req.method} ${req.url}`);
+  next();
+});
 
+// cors
+app.use(cors({ origin: true }));
+
+// CONNECTS TO THE DATABASE:
 async function connectToDatabase() {
   await mongoose.connect(`${process.env.MONGODB_URI}`);
   console.log("MongoDB is connected....");
 }
-
 await connectToDatabase();
 
-const schoolBlogSchema = new mongoose.Schema({
+// SETS THE SCHEMA OF A BLOG POST:
+const blogPostSchema = new mongoose.Schema({
   title: {
+    type: String,
+    required: true,
+  },
+  cover: {
     type: String,
     required: true,
   },
@@ -37,154 +42,96 @@ const schoolBlogSchema = new mongoose.Schema({
     required: true,
   },
 });
+const blogPostModel = mongoose.model("BlogPost", blogPostSchema);
 
-const collegeBlogSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-});
-
-const schoolBlogModel = mongoose.model("SchoolBlog", schoolBlogSchema);
-const collegeBlogModel = mongoose.model("CollegeBlog", collegeBlogSchema);
-
-async function createNewSchoolBlog(blogTitle, blogContent) {
-  const blog = new schoolBlogModel({
+// CREATES A NEW BLOG POST ENTRY IN THE DATABASE:
+async function createNewBlogPost(blogTitle, blogCover, blogContent) {
+  const blog = new blogPostModel({
     title: blogTitle,
+    cover: blogCover,
     content: blogContent,
   });
   await blog.save();
 }
 
-async function createNewCollegeBlog(blogTitle, blogContent) {
-  const blog = new collegeBlogModel({
-    title: blogTitle,
-    content: blogContent,
-  });
-  await blog.save();
-}
-
-async function findSchoolBlogs() {
-  const blogs = await schoolBlogModel.find();
+// SEARCHES FOR BLOG POSTS IN THE DATABASE AND RETURN THEM:
+async function findBlogPosts() {
+  const blogs = await blogPostModel.find();
   return blogs;
 }
 
-async function findCollegeBlogs() {
-  const blogs = await collegeBlogModel.find();
-  return blogs;
-}
-
+// HOME PAGE "GET" ROUTE CONFIG:
 app.get("/", async (req, res) => {
-  const type = "College";
-  const blogs = await findCollegeBlogs();
+  const type = "Post";
+  const blogs = await findBlogPosts();
   res.json({ typeOfBlogs: type, blogs: blogs });
 });
 
-app.get("/School", async (req, res) => {
-  const type = "School";
-  const blogs = await findSchoolBlogs();
-  console.log(blogs);
-  res.json({ typeOfBlogs: type, blogs: blogs });
+// ADD BLOG "POST" ROUTE CONFIG:
+app.post("/addBlog", async (req, res) => {
+  console.log(req.body);
+  const blogTitle = req.body.blogTitle;
+  const blogCover = req.body.blogCover;
+  const blogContent = req.body.blogContent;
+
+  await createNewBlogPost(blogTitle, blogCover, blogContent);
+  const blogs = await findBlogPosts();
+  res.json({ blogs });
 });
 
-app.get("/College", async (req, res) => {
-  const type = "College";
-  const blogs = await findCollegeBlogs();
-  console.log(blogs);
-  res.json({ typeOfBlogs: type, blogs: blogs });
+//READ BLOG "POST" ROUTE CONFIG:
+app.get("/read/:blogId", async (req, res) => {
+  console.log("entrou no app.get()" + req.params);
+
+  var blogObject = await blogPostModel.findOne({ _id: req.params.blogId });
+
+  blogObject._id = req.params.blogId;
+  res.json({ blogPost: blogObject });
 });
 
+// CHECK IF THE POST IS BEING DELETED OR EDITED:
+app.post("/actions", async (req, res) => {
+  console.log("LOG 02 : Actions????");
+  const action = req.body.action;
 
+  if (action === "delete") {
+    await blogPostModel.findByIdAndDelete({ _id: req.body.blogId });
+    console.log("blogpostdeleted");
+    res.json({ message: "Blog deleted successfully" });
+  } else if (action === "edit") {
+    console.log("LOG 03A: SIM.... Actions!!! How?");
+    var blog_ = await blogPostModel.findById({ _id: req.body.blogId });
+    console.log("blog post found: " + blog_.title);
+    res.json({ blogPost: blog_ });
+  } else {
+    console.log(action);
+    res.sendStatus(404);
+  }
+});
 
-app.post('/addBlog', async (req, res) => {
-    console.log(req.body);
-    const blogType = req.body.blogType;
-    const blogTitle = req.body.blogTitle;
-    const blogContent = req.body.blogContent;
-  
-    if (blogType === 'College') {
-      await createNewCollegeBlog(blogTitle, blogContent);
-      const blogs = await findCollegeBlogs();
-      res.json({ typeOfBlogs: blogType, blogs: blogs });
-    } else {
-      await createNewSchoolBlog(blogTitle, blogContent);
-      const blogs = await findSchoolBlogs();
-      res.json({ typeOfBlogs: blogType, blogs: blogs });
-    }
-  });
-  
-  app.post('/detailedBlog', async (req, res) => {
-    console.log(req.body);
-  
-    const blogType = req.body.blogType;
-    const blogId = req.body.blogId;
-  
-    var blogObject = {};
-  
-    if (blogType === 'College') {
-      blogObject = await collegeBlogModel.findOne({ _id: blogId });
-    } else {
-      blogObject = await schoolBlogModel.findOne({ _id: blogId });
-    }
-  
-    console.log('Printing object\n');
+// UPDATE BLOG "POST" ROUTE CONFIG:
+app.put("/update/:blogId", async (req, res) => {
+  console.log("entrou no app.put()" + req.body._id);
+
+  try {
+    console.log("Tentando..." + req.body._id + " / " + req.body.blogTitle);
+    var blogObject = await blogPostModel.findByIdAndUpdate(
+      { _id: req.body._id },
+      {
+        title: req.body.blogTitle,
+        content: req.body.blogContent,
+        cover: req.body.blogCover,
+      },
+      {new: true}
+    );
     console.log(blogObject);
-  
-    blogObject._id = blogId;
-    blogObject.type = blogType;
-  
-    res.json({ blog: blogObject });
-  });
-  
-  app.post('/actions', async (req, res) => {
-    const action = req.body.action;
-  
-    if (action === 'delete') {
-      if (req.body.blogType === 'College') {
-        await collegeBlogModel.findByIdAndDelete({ _id: req.body.blogId });
-      } else {
-        await schoolBlogModel.findByIdAndDelete({ _id: req.body.blogId });
-      }
-  
-      res.json({ message: 'Blog deleted successfully' });
-    } else {
-      console.log(action);
-      res.sendStatus(404);
-    }
-    
-  });
-  
-  app.post('/updateBlog', async (req, res) => {
-    const blogId = req.body.blogId;
-    const blogType = req.body.blogType;
-    const blogTitle = req.body.blogTitle;
-    const blogContent = req.body.blogContent;
-  
-    var blogObject = {
-      title: blogTitle,
-      content: blogContent,
-    };
-  
-    if (blogType === 'College') {
-      await collegeBlogModel.findByIdAndUpdate({ _id: blogId }, { $set: blogObject });
-      blogObject = await collegeBlogModel.findById({ _id: blogId });
-    } else {
-      await schoolBlogModel.findByIdAndUpdate({ _id: blogId }, { $set: blogObject });
-      blogObject = await schoolBlogModel.findById({ _id: blogId });
-    }
-  
-    blogObject.type = blogType;
-  
-    console.log('after updation ');
-    console.log(blogObject);
-    res.json({ blog: blogObject });
-  });
+    res.json({ blogPost: blogObject });
+  } catch (error) {
+    console.log(error);
+  }
+});
 
-
+// LISTEN PORT:
 app.listen(port, () => {
   console.log(`Server is listening on port: ${port}`);
 });
